@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 import zipfile
 import io
-from urllib.parse import urljoin, urldefrag
+from urllib.parse import quote, urljoin, urldefrag, urlparse, urlunparse
 
 import pandas as pd
 from cachetools import cached, TTLCache
@@ -377,8 +377,15 @@ def download_to_dir(url, down_load_to, force_redo=False):
     downloaded = download_to_path(url, path, force_redo=force_redo)
     return path, downloaded
 
-
 def download_to_path(url, path_and_name, force_redo=False):
+    try:
+        return _download_to_path(url, path_and_name, force_redo)
+    except requests.HTTPError:
+        url = url.replace("#", "%23")
+        return _download_to_path(url, path_and_name, force_redo)
+
+
+def _download_to_path(url, path_and_name, force_redo=False):
     """
     Download a file from `url` to `path_and_name`. Returns True if a
     new network fetch occurred, False if the destination already
@@ -465,7 +472,7 @@ def download_elements_file(url, path_and_name):
     link = url + last_file_name
 
     download_to_path(link, path_and_name)
-    
+
 
 def download_xlsx(url, path_and_name):
     """
